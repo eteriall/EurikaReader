@@ -35,13 +35,41 @@ def get_user_page(uid, book_id):
 
 @app.route('/')
 def login():
-    if request.cookies.get('userID') is None:
-        return render_template('login.html')
+    if request.values.get('id') is None:
+        if request.cookies.get('userID') is None:
+            return render_template('login.html', next=request.values.get('next'))
+        else:
+            if request.values.get('next') is not None:
+                return redirect(request.values['next'])
+            return 'Вы уже авторизованы. Выберите книгу в боте, чтобы начать читать.'
     else:
-        if request.values.get('next') is not None:
-            return redirect(request.values['next'])
-        return 'Вы уже авторизованы. Выберите книгу в боте, чтобы начать читать.'
+        print(request.values.get('next'), request.values.get('id'), request.cookies.get('userID'))
 
+        resp = make_response(redirect(request.values.get('next')))
+        resp.set_cookie('userID', request.values['id'])
+        return resp
+
+@app.route("/0/page/0")
+def instant_view_test_page():
+    with open(f'posting/books/paging/3.csv') as f:
+        d = tuple(v.split(';') for v in filter(lambda x: x != '', f.read().split('\n')))
+        data = {k[0]: k[1] for k in d}
+    print(data)
+    return requests.get(data['2']).text
+
+@app.route('/<book_id>')
+def book(book_id):
+    if request.cookies.get('userID') is None:
+        return redirect(url_for('.login', next=request.url))
+
+    uid = request.cookies.get('userID')
+    page_n = get_user_page(uid, book_id)
+    page_n = 1 if page_n is None else page_n
+
+    with open(f'posting/books/paging/{book_id}.csv') as f:
+        d = tuple(v.split(';') for v in filter(lambda x: x != '', f.read().split('\n')))
+        data = {k[0]: k[1] for k in d}
+    return requests.get(data[page_n]).text
 
 @app.route('/<book_id>/page/<page_n>')
 def page(book_id, page_n):
@@ -49,23 +77,13 @@ def page(book_id, page_n):
         return redirect(url_for('.login', next=request.url))
 
     uid = request.cookies.get('userID')
-    print(uid, 'uid')
     change_user_page(uid, book_id, page_n)
-
+    
     with open(f'posting/books/paging/{book_id}.csv') as f:
         d = tuple(v.split(';') for v in filter(lambda x: x != '', f.read().split('\n')))
         data = {k[0]: k[1] for k in d}
     return requests.get(data[page_n]).text
-
-
-@app.route('/login')
-def login_tg():
-    print(request.cookies.get('next'), request.values.get('id'), request.cookies.get('userID'))
-
-    resp = make_response('Успешная авторизация')
-    resp.set_cookie('userID', request.values['id'])
-    return resp
-
+    
 
 @app.route('/test')
 def infinite_scroll_test():
