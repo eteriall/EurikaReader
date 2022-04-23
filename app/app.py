@@ -15,10 +15,14 @@ pages = db["pages"]
 
 def change_user_page(uid, book_id, new_page_n):
     document = {'uid': uid, 'bid': book_id, 'pn': new_page_n}
+    print(f"user {uid} swiped {book_id} to page {new_page_n}")
+    existed = None
     try:
         existed = pages.update_field({'uid': uid, 'bid': book_id}, {'pn': new_page_n})
     except Exception as e:
-        print(e)
+        new = pages.insert_one(document)
+    if existed is None:
+        
         new = pages.insert_one(document)
     return document
 
@@ -45,14 +49,11 @@ def page(book_id, page_n):
         return redirect(url_for('.login', next=request.url))
 
     uid = request.cookies.get('userID')
-    next_page = get_user_page(uid, book_id)
-    print(next_page)
+    print(uid, 'uid')
     change_user_page(uid, book_id, page_n)
-    next_page = get_user_page(uid, book_id)
-    print(next_page)
 
-    with open(f'books/paging/{book_id}.csv') as f:
-        d = tuple(v.split(';') for v in f.read().split('\n'))
+    with open(f'posting/books/paging/{book_id}.csv') as f:
+        d = tuple(v.split(';') for v in filter(lambda x: x != '', f.read().split('\n')))
         data = {k[0]: k[1] for k in d}
     return requests.get(data[page_n]).text
 
@@ -75,6 +76,9 @@ def infinite_scroll_test():
 def telegraph_files(err):
     return redirect(f'https://telegra.ph/{request.full_path}')
 
+@app.route('/test2')
+def test():
+    return render_template('test.html')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80)
