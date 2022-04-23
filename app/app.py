@@ -6,19 +6,17 @@ from flask import render_template, request, make_response, url_for
 from werkzeug.utils import redirect
 import pymongo
 
+from db import Database
+
 app = flask.Flask(__name__)
-
-client = pymongo.MongoClient(os.environ.get('MONGODB_STRING'))
-
-reader = client["reader"]
-books = reader["books"]
-pages = reader["pages"]
+db = Database('db.json')
+pages = db["pages"]
 
 
 def change_user_page(uid, book_id, new_page_n):
     document = {'uid': uid, 'bid': book_id, 'pn': new_page_n}
     try:
-        existed = pages.update_one({'uid': uid, 'bid': book_id}, {"$set": {"pn": new_page_n}})
+        existed = pages.update_field({'uid': uid, 'bid': book_id}, {'pn': new_page_n})
     except Exception as e:
         print(e)
         new = pages.insert_one(document)
@@ -27,11 +25,8 @@ def change_user_page(uid, book_id, new_page_n):
 
 def get_user_page(uid, book_id):
     document = {'uid': uid, 'bid': book_id}
-    try:
-        existed = dict(pages.find(document)).get('pn')
-    except Exception as e:
-        return -1
-    return existed
+    existed = pages.find(document)
+    return None if existed is None else existed.get('pn')
 
 
 @app.route('/')

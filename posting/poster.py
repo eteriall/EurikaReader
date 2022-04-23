@@ -8,7 +8,7 @@ import telegraph.utils
 from telegraph import Telegraph
 import bs4
 
-domain = 'https://eurika-reader.herokuapp.com'
+domain = 'http://51.250.106.113'
 
 
 class Poster:
@@ -117,10 +117,10 @@ class Poster:
 
             soup = bs4.BeautifulSoup(html, 'html.parser')
             soup = self.prepare_html(soup)
-            sp = self.split_html_book(soup, lines_n=100)
+            sp = self.split_html_book(soup, lines_n=120)
 
             with open(f'books/paging/{book_id}.csv', mode='w') as paging_db:
-                for page_n, elem in tqdm.tqdm(enumerate(sp, 1)):
+                for page_n, elem in tqdm.tqdm(enumerate(sp, 1), total=len(sp)):
 
                     # Add next/previous pages URLs
                     elem = ''.join(elem)
