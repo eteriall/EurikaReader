@@ -64,16 +64,21 @@ def page(book_id, page_n):
 
 @app.route('/login')
 def login_tg():
-    print(request.values.get('id'), request.cookies.get('userID'))
+    print(request.cookies.get('next'), request.values.get('id'), request.cookies.get('userID'))
 
     resp = make_response('Успешная авторизация')
     resp.set_cookie('userID', request.values['id'])
     return resp
 
 
+@app.route('/test')
+def infinite_scroll_test():
+    return render_template('index.html')
+
+
 @app.errorhandler(404)
 def telegraph_files(err):
-    return redirect(f'https://telegra.ph/{request.full_path }')
+    return redirect(f'https://telegra.ph/{request.full_path}')
 
 
 if __name__ == "__main__":
