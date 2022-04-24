@@ -8,7 +8,7 @@ import telegraph.utils
 from telegraph import Telegraph
 import bs4
 
-domain = 'http://51.250.106.113'
+domain = 'http://edu-logos.ru'
 
 
 class Poster:
@@ -152,4 +152,5 @@ class Poster:
 
 
 p = Poster()
-p.post_book('books/3.html')
+p.convert_book('books/5.epub')
+p.post_book('books/5.html')
